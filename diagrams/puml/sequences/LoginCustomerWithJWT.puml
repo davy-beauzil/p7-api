@@ -1,0 +1,15 @@
+@startuml
+
+!theme mars
+
+Visitor as "Not Authenticated Visitor" -> API : POST /api/login_check
+
+API -> Database : check user credentials
+Database --> API
+alt Bad credentials
+    API --> Visitor : return 401 (Unauthorized)
+else Good credentials
+    API -> API : make JWT
+    API --> Visitor : return JWT with code 200 (OK)
+end
+@enduml

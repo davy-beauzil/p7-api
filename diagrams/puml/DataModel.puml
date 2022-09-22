@@ -1,0 +1,41 @@
+@startuml
+
+!theme plain
+left to right direction
+
+class Customer {
+    email: string
+    password: string
+    name: string
+    siret: string
+    createdAt: datetime
+    updatedAt: datetime
+}
+
+class User {
+    firstname: string
+    lastname: string
+    email: string
+    phoneNumber: string
+    createdAt: datetime
+    updatedAt: datetime
+}
+
+class Phone {
+    brand: string
+    model: string
+    operatingSystem: string
+    processor: string
+    storage: int
+    ram: int
+    screenWidth: int
+    screenHeight: int
+    screenSize: float
+    bluetooth: bool
+    wifi: bool
+    priceWithoutTax: float
+}
+
+Customer "1" -- "1..*" User : employer
+
+@enduml

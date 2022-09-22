@@ -1,0 +1,23 @@
+@startuml
+
+!theme mars
+
+Customer -> API : POST /users
+
+API -> Security : customer is logged in ?
+Security --> API
+alt Customer is not logged in
+    API --> Customer : return 401 (Unauthorized)
+else Customer is logged in
+    API -> Validator : data is valid ?
+    Validator --> API
+
+    alt data is not valid
+        API --> Customer : return 400 (Bad request)
+    else data is valid
+        API --> UserRepository : persist and flush data
+        UserRepository --> Database : user saving
+        API --> Customer : return 201 (Created) with user informations
+    end
+end
+@enduml

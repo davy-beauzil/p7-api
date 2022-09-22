@@ -1,0 +1,18 @@
+@startuml
+
+!theme mars
+
+Customer -> API : GET /users
+
+API -> Security : Customer is logged in ?
+Security --> API
+alt Customer is not logged in
+    API --> Customer : return 401 (Unauthorized)
+else Customer is logged in
+    API -> UserRepository : get users
+    UserRepository --> Database : get users
+    Database --> UserRepository
+    UserRepository --> API
+    API --> Customer : return 200 (OK)
+end
+@enduml

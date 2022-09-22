@@ -1,0 +1,10 @@
+@startuml
+
+!theme plain
+left to right direction
+
+:Not authenticated Visitor: as Visitor
+
+Visitor ---> (log in)
+
+@enduml

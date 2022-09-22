@@ -1,0 +1,20 @@
+@startuml
+
+!theme plain
+left to right direction
+
+:Customer:
+
+package Phone {
+    Customer ---> (see phones list)
+    Customer ---> (see phone details)
+}
+
+package User {
+    (see users linked it) <--- Customer
+    (see user linked it details) <--- Customer
+    (add new user linked it) <--- Customer
+    (delete a user linked it) <--- Customer
+}
+
+@enduml

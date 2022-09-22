@@ -1,0 +1,16 @@
+@startuml
+
+!theme mars
+
+Customer -> API : DELETE /users/{uuid}
+
+API -> Security : Customer is logged in AND Customer is linked to user ?
+Security --> API
+alt Customer is not logged in OR Customer is not linked to user
+    API --> Customer : return 401 (Unauthorized)
+else Customer is logged in AND Customer is linked to user
+    API -> UserRepository : user removing
+    UserRepository --> Database : removing user from database
+    API --> Customer : return 204 (No content)
+end
+@enduml
