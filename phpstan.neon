@@ -3,3 +3,7 @@ parameters:
 	paths:
 		- src
 		- tests
+	ignoreErrors:
+	    -
+	        message: '#\$id is never written, only read#'
+	        path: src/Entity/*.php
