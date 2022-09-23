@@ -6,7 +6,6 @@ use App\Entity\Customer;
 use Doctrine\ORM\EntityManager;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 abstract class AbstractAppCase extends WebTestCase
 {
