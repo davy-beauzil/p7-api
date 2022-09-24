@@ -3,6 +3,7 @@
 namespace App\EventListener;
 
 use App\Entity\Customer;
+use App\Entity\Phone;
 use DateTimeImmutable;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 
@@ -10,6 +11,7 @@ class FillEntities
 {
     final const ENTITIES_SUPPORTED = [
         Customer::class,
+        Phone::class,
     ];
 
     public function prePersist(LifecycleEventArgs $args): void

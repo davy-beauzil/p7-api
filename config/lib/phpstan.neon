@@ -2,6 +2,8 @@ parameters:
 	level: max
 	paths:
 		- ../../src
+	excludePaths:
+	    - ../../src/DataFixtures/*
 #	ignoreErrors:
 #	    -
 #	        message: '#\$id is never written, only read#'
