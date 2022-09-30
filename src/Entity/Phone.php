@@ -12,45 +12,55 @@ class Phone
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'NONE')]
     #[ORM\Column]
-    #[Groups(['get:collection'])]
+    #[Groups(['get:collection', 'get:item'])]
     private string $id;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['get:collection'])]
+    #[Groups(['get:collection', 'get:item'])]
     private ?string $brand = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['get:collection'])]
+    #[Groups(['get:collection', 'get:item'])]
     private ?string $model = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['get:item'])]
     private ?string $operatingSystem = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['get:item'])]
     private ?string $processor = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['get:item'])]
     private ?int $storage = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['get:item'])]
     private ?int $ram = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['get:item'])]
     private ?int $screenWidth = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['get:item'])]
     private ?int $screenHeight = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['get:item'])]
     private ?float $screenSize = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['get:item'])]
     private ?bool $bluetooth = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['get:item'])]
     private ?bool $wifi = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['get:item'])]
     private ?float $priceExclTax = null;
 
     #[ORM\Column]

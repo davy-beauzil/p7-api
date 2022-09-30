@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\QueryParameters;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
@@ -40,5 +41,13 @@ class BaseController extends AbstractController
         /** @var QueryParameters $queryParameters */
         $queryParameters = $this->serializer->denormalize($request->query->all(), QueryParameters::class);
         return $queryParameters;
+    }
+
+    public function createNotFoundResponse(string $message = 'Resource not found'): JsonResponse
+    {
+        return new JsonResponse([
+            'message' => $message,
+            'code' => 404
+        ], 404);
     }
 }
