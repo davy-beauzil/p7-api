@@ -2,8 +2,10 @@
 
 namespace App\Repository;
 
+use App\Dto\QueryParameters;
 use App\Entity\Phone;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -39,28 +41,18 @@ class PhoneRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return Phone[] Returns an array of Phone objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('p.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Phone
-//    {
-//        return $this->createQueryBuilder('p')
-//            ->andWhere('p.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /**
+     * @param QueryParameters $parameters
+     * @return array
+     */
+    public function findWithPagination(QueryParameters $parameters): array
+    {
+        return $this->createQueryBuilder('p')
+            ->setFirstResult(($parameters->page - 1) * $parameters->per_page)
+            ->setMaxResults($parameters->per_page)
+            ->orderBy('p.createdAt', Criteria::DESC)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
 }

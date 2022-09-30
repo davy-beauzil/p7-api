@@ -9,25 +9,25 @@ use Faker\Factory;
 
 class PhoneFixtures extends Fixture
 {
-    const STORAGES = [32, 64, 128, 256, 512, 1024];
-    const MODELS = ['Mini', 'Max', 'Pro Max', 'Galaxy'];
-    const PROCESSORS = ['Snapdragon', 'Exynos', 'HiSilicon Kirin'];
-    const BRAND = ['Samsung', 'Apple', 'Huawei', 'Xiaomi', 'Oppo'];
-    const RAM = [2, 3, 4, 6, 8, 12];
-    const SCREEN_DIMENSIONS = [
+    public const STORAGES = [32, 64, 128, 256, 512, 1024];
+    public const MODELS = ['Mini', 'Max', 'Pro Max', 'Galaxy'];
+    public const PROCESSORS = ['Snapdragon', 'Exynos', 'HiSilicon Kirin'];
+    public const BRAND = ['Samsung', 'Apple', 'Huawei', 'Xiaomi', 'Oppo'];
+    public const RAM = [2, 3, 4, 6, 8, 12];
+    public const SCREEN_DIMENSIONS = [
         ['width' => 480, 'height' => 848],
         ['width' => 720, 'height' => 1280],
         ['width' => 1080, 'height' => 1920],
         ['width' => 1520, 'height' => 2704],
         ['width' => 2160, 'height' => 3840],
     ];
-    const OS = ['Android', 'IOS'];
+    public const OS = ['Android', 'IOS'];
 
     public function load(ObjectManager $manager): void
     {
         $faker = Factory::create('fr_FR');
 
-        for($i = 0 ; $i < 20 ; $i++){
+        for ($i = 0; $i < 20; $i++) {
             $phone = new Phone();
             $dimensions = $this->getItem(self::SCREEN_DIMENSIONS);
             $phone->setBrand($this->getItem(self::BRAND))

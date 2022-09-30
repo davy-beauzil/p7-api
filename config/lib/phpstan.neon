@@ -5,6 +5,5 @@ parameters:
 	excludePaths:
 	    - ../../src/DataFixtures/*
 #	ignoreErrors:
-#	    -
-#	        message: '#\$id is never written, only read#'
-#	        path: src/Entity/*.php
+#		- '#Call to an undefined method [a-zA-Z0-9\\_]+::doFoo\(\)#'
+#		- '#Call to an undefined method [a-zA-Z0-9\\_]+::doBar\(\)#'

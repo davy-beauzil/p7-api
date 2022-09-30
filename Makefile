@@ -8,7 +8,7 @@ phpstan: vendor
 
 .PHONY: ecs
 ecs: vendor
-	vendor/bin/ecs --fix --config=./config/lib/ecs.php
+	vendor/bin/ecs check src --fix --config=./config/lib/ecs.php
 
 .PHONY: static-analyze
 static-analyze: vendor
