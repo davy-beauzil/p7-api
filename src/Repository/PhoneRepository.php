@@ -43,7 +43,7 @@ class PhoneRepository extends ServiceEntityRepository
 
     /**
      * @param QueryParameters $parameters
-     * @return array
+     * @return Phone[]
      */
     public function findWithPagination(QueryParameters $parameters): array
     {
