@@ -1,0 +1,9 @@
+parameters:
+	level: 7
+	paths:
+		- ../../src
+	excludePaths:
+	    - ../../src/DataFixtures/*
+#	ignoreErrors:
+#		- '#Call to an undefined method [a-zA-Z0-9\\_]+::doFoo\(\)#'
+#		- '#Call to an undefined method [a-zA-Z0-9\\_]+::doBar\(\)#'

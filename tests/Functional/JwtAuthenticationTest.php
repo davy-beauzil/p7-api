@@ -13,15 +13,9 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class JwtAuthenticationTest extends AbstractAppCase
 {
-    const EMAIL = 'test@test.fr';
-    const PASSWORD = 'test@1234';
-
-    private ContainerInterface $container;
-
     protected function setUp(): void
     {
         parent::setUp();
-        $this->container = static::getContainer();
     }
 
     /**
@@ -33,7 +27,7 @@ class JwtAuthenticationTest extends AbstractAppCase
     {
         // given
         $this->addCustomer();
-        $body = sprintf('{"username": "%s", "password": "%s"}', self::EMAIL, self::PASSWORD);
+        $body = sprintf('{"username": "%s", "password": "%s"}', AbstractAppCase::EMAIL, AbstractAppCase::PASSWORD);
         /** @var JWTEncoderInterface $encoder */
         $encoder = $this->container->get(JWTEncoderInterface::class);
 
@@ -48,6 +42,7 @@ class JwtAuthenticationTest extends AbstractAppCase
         static::assertJson($response->getContent());
         static::assertSame('Test company', $payload['name']);
         static::assertSame('test@test.fr', $payload['username']);
+        static::assertArrayNotHasKey('password', $payload);
         static::assertGreaterThan(time(), intval($payload['exp']));
     }
 
@@ -66,30 +61,5 @@ class JwtAuthenticationTest extends AbstractAppCase
         // then
         static::assertResponseStatusCodeSame(401);
         static::assertSame('Invalid credentials.', $response['message']);
-    }
-
-    /**
-     * @throws \Exception
-     */
-    private function addCustomer(): void
-    {
-        /** @var UserPasswordHasherInterface $hasher */
-        $hasher = $this->container->get(UserPasswordHasherInterface::class);
-
-        /** @var CustomerRepository $customerRepository */
-        $customerRepository = $this->container->get(CustomerRepository::class);
-
-        $customer = new Customer();
-        $customer->setEmail(self::EMAIL)
-            ->setPassword($hasher->hashPassword($customer, self::PASSWORD))
-            ->setRoles(['ROLE_USER'])
-            ->setPhoneNumber('0612345678')
-            ->setZipCode('99000')
-            ->setSiret('XXX XXX XXX')
-            ->setName('Test company')
-            ->setAddress('test')
-            ->setCity('test');
-
-        $customerRepository->add($customer, true);
     }
 }
