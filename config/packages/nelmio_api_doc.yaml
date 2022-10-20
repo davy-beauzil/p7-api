@@ -1,8 +1,12 @@
+imports:
+    - { resource: ../nelmio/phones.yaml }
+    - { resource: ../nelmio/phone.yaml }
+    - { resource: ../nelmio/authentication.yaml }
 nelmio_api_doc:
     documentation:
         info:
             title: Bilmo API
-            description: This is an awesome app who allow you to get phones informations, to stock informations about your company and also about your client (/api/users endpoint)
+            description: This is an awesome app who allow you to get phones information, to stock information about your company and also about your client (/api/users endpoint)
             version: 1.0.0
         components:
             securitySchemes:
@@ -13,63 +17,9 @@ nelmio_api_doc:
         security:
             -   Bearer: [ ]
         paths:
-            '/api/login_check':
-                post:
-                    tags: [ authentication ]
-                    summary: 'Get JWT token'
-                    description: 'Authenticate you and get JWT token'
-                    requestBody:
-                        required: true
-                        description: 'Authenticate you with your email address as username and your password to get a JWT token'
-                        content:
-                            application/json:
-                                schema:
-                                    properties:
-                                        username:
-                                            description: 'Your email address'
-                                            type: string
-                                        password:
-                                            type: string
-                                    type: object
-                    responses:
-                        '200':
-                            description: 'OK'
-                        '401':
-                            description: 'Invalid credentials.'
-            '/api/phones':
-                get:
-                    tags: [ phone ]
-                    summary: 'Get phones list'
-                    description: 'Get phones list'
-                    responses:
-                        '200':
-                            description: 'OK'
-                        '401':
-                            description: 'Unauthorized'
-            '/api/phones/{id}':
-                get:
-                    tags: [ phone ]
-                    summary: 'Get phone details'
-                    description: 'Get phone details'
-                    parameters:
-                        -
-                            name: id
-                            in: path
-                            description: 'Id of phone'
-                            required: true
-                            schema:
-                                type: string
-                            examples:
-                                id:
-                                    summary: 'id'
-                                    value: '057301448528925b050091b6c070cbca3415dda6c133f027a4854f48321aa893cdcc576dcdc63488b90df47ba38b1d2274a8b3ec3b058b558d3ef5c101de9427'
-                    responses:
-                        '200':
-                            description: 'OK'
-                        '401':
-                            description: 'Unauthorized'
-                        '404':
-                            description: 'Not found'
+            '/api/phones': '%nelmio_phones%'
+            '/api/phones/{id}': '%nelmio_phone%'
+            '/api/login_check': '%nelmio_authentication%'
         tags:
             -
                 name: authentication

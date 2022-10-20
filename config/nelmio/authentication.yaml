@@ -1,0 +1,24 @@
+parameters:
+    nelmio_authentication:
+        post:
+            tags: [ authentication ]
+            summary: 'Get JWT token'
+            description: 'Authenticate you and get JWT token'
+            requestBody:
+                required: true
+                description: 'Authenticate you with your email address as username and your password to get a JWT token'
+                content:
+                    application/json:
+                        schema:
+                            properties:
+                                username:
+                                    description: 'Your email address'
+                                    type: string
+                                password:
+                                    type: string
+                            type: object
+            responses:
+                '200':
+                    description: 'OK'
+                '401':
+                    description: 'Invalid credentials.'

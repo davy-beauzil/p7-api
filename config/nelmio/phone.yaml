@@ -1,0 +1,24 @@
+parameters:
+    nelmio_phone:
+        get:
+            tags: [ phone ]
+            summary: 'Get phone details'
+            description: 'Get phone details'
+            parameters:
+                -   name: id
+                    in: path
+                    description: 'Id of phone'
+                    required: true
+                    schema:
+                        type: string
+                    examples:
+                        id:
+                            summary: 'id'
+                            value: '057301448528925b050091b6c070cbca3415dda6c133f027a4854f48321aa893cdcc576dcdc63488b90df47ba38b1d2274a8b3ec3b058b558d3ef5c101de9427'
+            responses:
+                '200':
+                    description: 'OK'
+                '401':
+                    description: 'Unauthorized'
+                '404':
+                    description: 'Not found'
