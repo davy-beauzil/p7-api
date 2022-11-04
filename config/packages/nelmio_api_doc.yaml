@@ -1,7 +1,9 @@
 imports:
-    - { resource: ../nelmio/phones.yaml }
-    - { resource: ../nelmio/phone.yaml }
     - { resource: ../nelmio/authentication.yaml }
+    - { resource: ../nelmio/phones.yaml }
+    - { resource: ../nelmio/phone-id.yaml }
+    - { resource: ../nelmio/users.yaml }
+    - { resource: ../nelmio/user-id.yaml }
 nelmio_api_doc:
     documentation:
         info:
@@ -18,8 +20,10 @@ nelmio_api_doc:
             -   Bearer: [ ]
         paths:
             '/api/phones': '%nelmio_phones%'
-            '/api/phones/{id}': '%nelmio_phone%'
+            '/api/phones/{id}': '%nelmio_phone_id%'
             '/api/login_check': '%nelmio_authentication%'
+            '/api/users': '%nelmio_users%'
+            '/api/users/{id}': '%nelmio_user_id%'
         tags:
             -
                 name: authentication
@@ -27,6 +31,9 @@ nelmio_api_doc:
             -
                 name: phone
                 description: Phones proposed in catalog
+            -
+                name: user
+                description: Users linked to customers
 
     areas: # to filter documented areas
         path_patterns:

@@ -1,0 +1,39 @@
+parameters:
+    nelmio_users:
+        get:
+            tags: [ user ]
+            summary: 'Get users list'
+            description: 'Get users list'
+            responses:
+                '200':
+                    description: 'OK'
+                '401':
+                    description: 'Unauthorized'
+        post:
+            tags: [ user ]
+            summary: 'Create new user'
+            description: 'Create new user'
+            requestBody:
+                required: true
+                description: 'Create new user linked to your customer account'
+                request: 'test'
+                content:
+                    multipart/form-data:
+                        schema:
+                            properties:
+                                firstname:
+                                    type: string
+                                lastname:
+                                    type: string
+                                email:
+                                    type: string
+                                phoneNumber:
+                                    type: string
+                            type: object
+            responses:
+                '201':
+                    description: 'Created'
+                '400':
+                    description: 'Bad Request'
+                '401':
+                    description: 'Unauthorized'

@@ -17,6 +17,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
@@ -83,17 +84,22 @@ class UserController extends BaseController
      * @throws ExceptionInterface
      */
     #[Route('/users', name: 'post_users', methods: [Request::METHOD_POST])]
-    public function create(Request $request): JsonResponse
+    public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
         $this->denyAccessIfNotCustomer();
         /** @var Customer $customer */
         $customer = $this->getUser();
 
-
         /** @var User $user */
         $user = $this->serializer->denormalize($request->request->all(), User::class);
         $user->setCustomer($customer);
-        $this->userRepository->add($user, true);
+
+        //        dd($user);
+        if (count($validator->validate($user)) <= 0) {
+            $this->userRepository->add($user, true);
+        } else {
+            return $this->createBadRequestResponse();
+        }
         return new JsonResponse(
             [
                 'message' => 'Created',

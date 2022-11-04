@@ -68,6 +68,11 @@ class BaseController extends AbstractController
         return $this->createResponse($message, 401);
     }
 
+    public function createBadRequestResponse(string $message = 'Bad Request'): JsonResponse
+    {
+        return $this->createResponse($message, 400);
+    }
+
     public function denyAccessIfNotCustomer(): ?Response
     {
         if (!$this->getUser() instanceof Customer) {

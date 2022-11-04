@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use phpDocumentor\Reflection\Types\ArrayKey;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -58,10 +59,10 @@ class Customer implements UserInterface, PasswordAuthenticatedUserInterface
     private ?\DateTimeImmutable $updatedAt = null;
 
     /**
-     * @var ArrayCollection<array-key, User>
+     * @var Collection<array-key, User>
      */
     #[ORM\OneToMany(mappedBy: 'customer', targetEntity: User::class, cascade: ['remove'])]
-    private ArrayCollection $users;
+    private Collection $users;
 
     public function __construct()
     {
