@@ -3,10 +3,12 @@
 namespace App\Controller;
 
 use App\Dto\QueryParameters;
+use App\Entity\Customer;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
@@ -43,11 +45,34 @@ class BaseController extends AbstractController
         return $queryParameters;
     }
 
-    public function createNotFoundResponse(string $message = 'Resource not found'): JsonResponse
+    private function createResponse(string $message, int $code): JsonResponse
     {
         return new JsonResponse([
             'message' => $message,
-            'code' => 404
-        ], 404);
+            'code' => $code
+        ], $code);
+    }
+
+    public function createNoContentResponse(string $message = 'No Content'): JsonResponse
+    {
+        return $this->createResponse($message, 204);
+    }
+
+    public function createNotFoundResponse(string $message = 'Resource not found'): JsonResponse
+    {
+        return $this->createResponse($message, 404);
+    }
+
+    public function createAccessDeniedResponse(string $message = 'Access denied'): JsonResponse
+    {
+        return $this->createResponse($message, 401);
+    }
+
+    public function denyAccessIfNotCustomer(): ?Response
+    {
+        if (!$this->getUser() instanceof Customer) {
+            return $this->createAccessDeniedResponse();
+        }
+        return null;
     }
 }

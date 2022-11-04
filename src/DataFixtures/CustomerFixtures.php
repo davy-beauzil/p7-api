@@ -32,8 +32,22 @@ class CustomerFixtures extends Fixture
             ->setRoles(['ROLE_USER'])
             ->setEmail('test@test.fr')
             ->setPassword($this->hasher->hashPassword($customer, 'test@1234'));
-
         $manager->persist($customer);
+
+        for ($i = 1; $i < 10; $i++) {
+            $customer = new Customer();
+            $customer->setName($faker->company())
+                ->setSiret('000 000 000')
+                ->setAddress($faker->address())
+                ->setCity($faker->city())
+                ->setZipCode($faker->postcode())
+                ->setPhoneNumber($faker->phoneNumber())
+                ->setRoles(['ROLE_USER'])
+                ->setEmail($faker->email())
+                ->setPassword($this->hasher->hashPassword($customer, $faker->password()));
+            $manager->persist($customer);
+        }
+
         $manager->flush();
     }
 }
