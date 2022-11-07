@@ -94,7 +94,6 @@ class UserController extends BaseController
         $user = $this->serializer->denormalize($request->request->all(), User::class);
         $user->setCustomer($customer);
 
-        //        dd($user);
         if (count($validator->validate($user)) <= 0) {
             $this->userRepository->add($user, true);
         } else {

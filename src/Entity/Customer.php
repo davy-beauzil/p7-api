@@ -242,4 +242,12 @@ class Customer implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->users;
     }
+
+    public function addUser(User $user): self
+    {
+        if (!$this->users->contains($user)) {
+            $this->users->add($user);
+        }
+        return $this;
+    }
 }
