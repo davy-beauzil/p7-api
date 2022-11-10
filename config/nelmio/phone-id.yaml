@@ -1,5 +1,5 @@
 parameters:
-    nelmio_phone:
+    nelmio_phone_id:
         get:
             tags: [ phone ]
             summary: 'Get phone details'

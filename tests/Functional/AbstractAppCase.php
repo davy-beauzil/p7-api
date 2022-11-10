@@ -3,7 +3,9 @@
 namespace App\Tests\Functional;
 
 use App\Entity\Customer;
+use App\Entity\User;
 use App\Repository\CustomerRepository;
+use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Doctrine\ORM\EntityManager;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -32,7 +34,7 @@ abstract class AbstractAppCase extends WebTestCase
     /**
      * @throws Exception
      */
-    protected function addCustomer(string $email = self::EMAIL, string $password = self::PASSWORD): void
+    protected function addCustomer(string $email = self::EMAIL, string $password = self::PASSWORD): Customer
     {
         /** @var UserPasswordHasherInterface $hasher */
         $hasher = $this->container->get(UserPasswordHasherInterface::class);
@@ -52,6 +54,7 @@ abstract class AbstractAppCase extends WebTestCase
             ->setCity('test');
 
         $customerRepository->add($customer, true);
+        return $customer;
     }
 
     protected function getJWT(string $email = self::EMAIL, string $password = self::PASSWORD): ?string
@@ -59,32 +62,16 @@ abstract class AbstractAppCase extends WebTestCase
         $body = sprintf('{"username": "%s", "password": "%s"}', $email, $password);
         $this->client->request(Request::METHOD_POST, '/api/login_check', content: $body);
         $response = $this->client->getResponse();
-        return json_decode($response->getContent(), true)['token'] ?? null;
+        return json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR)['token'] ?? null;
     }
 
     private function truncateEntities(): void
     {
-        $entities = [
-            Customer::class,
-        ];
-        self::bootKernel();
-        $connection = $this->getEntityManager()
-            ->getConnection()
-        ;
-        $databasePlatform = $connection->getDatabasePlatform();
-
-        foreach ($entities as $entity) {
-            $query = $databasePlatform->getTruncateTableSQL(
-                $this->getEntityManager()
-                    ->getClassMetadata($entity)
-                    ->getTableName(),
-                true,
-            );
-            $connection->executeUpdate($query);
-        }
+        $purger = new ORMPurger($this->getEntityManager());
+        $purger->purge();
     }
 
-    private function getEntityManager(): EntityManager
+    protected function getEntityManager(): EntityManager
     {
         return self::$kernel->getContainer()
             ->get('doctrine')
