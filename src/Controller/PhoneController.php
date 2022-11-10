@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -43,7 +44,11 @@ class PhoneController extends BaseController
     public function getPhonesDetails(string $id): JsonResponse
     {
         $cacheId = sprintf('getPhonesDetails-%s', $id);
-        $phone = $this->phoneRepository->findOneById($id);
+        try {
+            $phone = $this->phoneRepository->findOneById($id);
+        } catch (ResourceNotFoundException) {
+            return $this->createNotFoundResponse();
+        }
 
         /** @var array<array-key, mixed> $response */
         $response = $this->serializer->normalize($phone, 'json', [AbstractNormalizer::GROUPS => 'get:item']);

@@ -8,6 +8,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Cache\InvalidArgumentException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
@@ -78,10 +79,16 @@ class PhoneRepository extends ServiceEntityRepository
     public function findOneById(string $id): Phone
     {
         $cacheId = sprintf('getPhonesDetails-%s', $id);
-        return $this->cache->get($cacheId, function (ItemInterface $item) use ($id) {
+        $phone = $this->cache->get($cacheId, function (ItemInterface $item) use ($id) {
             $item->tag('phonesCache');
             $item->expiresAfter(600);
             return $this->findOneBy(['id' => $id]);
         });
+
+        if (!$phone instanceof Phone) {
+            throw new ResourceNotFoundException();
+        }
+
+        return $phone;
     }
 }

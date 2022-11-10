@@ -12,6 +12,7 @@
 ###> symfony/phpunit-bridge ###
 .phpunit.result.cache
 /phpunit.xml
+/tests/coverage
 ###< symfony/phpunit-bridge ###
 
 ###> lexik/jwt-authentication-bundle ###
