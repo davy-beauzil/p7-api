@@ -7,6 +7,9 @@ use App\Entity\Phone;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Cache\InvalidArgumentException;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 /**
  * @extends ServiceEntityRepository<Phone>
@@ -18,8 +21,10 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class PhoneRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry                         $registry,
+        private readonly TagAwareCacheInterface $cache,
+    ) {
         parent::__construct($registry, Phone::class);
     }
 
@@ -44,15 +49,39 @@ class PhoneRepository extends ServiceEntityRepository
     /**
      * @param QueryParameters $parameters
      * @return Phone[]
+     * @throws InvalidArgumentException
      */
     public function findWithPagination(QueryParameters $parameters): array
     {
-        return $this->createQueryBuilder('p')
-            ->setFirstResult(($parameters->page - 1) * $parameters->per_page)
-            ->setMaxResults($parameters->per_page)
-            ->orderBy('p.createdAt', Criteria::DESC)
-            ->getQuery()
-            ->getResult()
-        ;
+        $cacheId = sprintf('getPhonesCollection-%d-%d', $parameters->page, $parameters->per_page);
+
+        /** @var Phone[] $phones */
+        $phones = $this->cache->get($cacheId, function (ItemInterface $item) use ($parameters) {
+            $item->tag('phonesCache');
+            $item->expiresAfter(600);
+            return $this->createQueryBuilder('p')
+                ->setFirstResult(($parameters->page - 1) * $parameters->per_page)
+                ->setMaxResults($parameters->per_page)
+                ->orderBy('p.createdAt', Criteria::DESC)
+                ->getQuery()
+                ->getResult()
+            ;
+        });
+        return $phones;
+    }
+
+    /**
+     * @param string $id
+     * @return Phone
+     * @throws InvalidArgumentException
+     */
+    public function findOneById(string $id): Phone
+    {
+        $cacheId = sprintf('getPhonesDetails-%s', $id);
+        return $this->cache->get($cacheId, function (ItemInterface $item) use ($id) {
+            $item->tag('phonesCache');
+            $item->expiresAfter(600);
+            return $this->findOneBy(['id' => $id]);
+        });
     }
 }
