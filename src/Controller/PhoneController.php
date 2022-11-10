@@ -20,7 +20,6 @@ class PhoneController extends BaseController
 {
     public function __construct(
         private readonly PhoneRepository        $phoneRepository,
-        private readonly TagAwareCacheInterface $cache,
         private readonly RouterInterface        $router,
     ) {
         parent::__construct();
@@ -33,17 +32,8 @@ class PhoneController extends BaseController
     public function getPhonesCollection(Request $request): JsonResponse
     {
         $queryParameters = $this->getQueryParameters($request);
-        $cacheId = sprintf('getPhonesCollection-%d-%d', $queryParameters->page, $queryParameters->per_page);
-        $repository = $this->phoneRepository;
-
-        $phones = $this->cache->get($cacheId, function (ItemInterface $item) use ($repository, $queryParameters) {
-            $item->tag('phonesCache');
-            $item->expiresAfter(600);
-            return $repository->findWithPagination($queryParameters);
-        });
-        $phones = $this->serializer->normalize($phones, 'json', [AbstractNormalizer::GROUPS => ['get:collection']]);
-
-        return new JsonResponse($phones);
+        $phones = $this->phoneRepository->findWithPagination($queryParameters);
+        return new JsonResponse($this->serializer->normalize($phones, 'json', [AbstractNormalizer::GROUPS => ['get:collection']]));
     }
 
     /**
@@ -53,23 +43,14 @@ class PhoneController extends BaseController
     public function getPhonesDetails(string $id): JsonResponse
     {
         $cacheId = sprintf('getPhonesDetails-%s', $id);
-        $repository = $this->phoneRepository;
-        $phone = $this->cache->get($cacheId, function (ItemInterface $item) use ($repository, $id) {
-            $item->tag('phonesCache');
-            $item->expiresAfter(600);
-            return $repository->findOneBy(['id' => $id]);
-        });
+        $phone = $this->phoneRepository->findOneById($id);
 
-        if (!$phone instanceof Phone) {
-            return $this->createNotFoundResponse();
-        }
-
-        /** @var array<array-key, mixed> $phone */
-        $phone = $this->serializer->normalize($phone, 'json', [AbstractNormalizer::GROUPS => 'get:item']);
-        $phone['_links'] = [
+        /** @var array<array-key, mixed> $response */
+        $response = $this->serializer->normalize($phone, 'json', [AbstractNormalizer::GROUPS => 'get:item']);
+        $response['_links'] = [
             'list' => $this->router->generate('phones_collection')
         ];
 
-        return new JsonResponse($phone);
+        return new JsonResponse($response);
     }
 }
