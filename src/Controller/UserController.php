@@ -74,7 +74,8 @@ class UserController extends BaseController
             AbstractNormalizer::IGNORED_ATTRIBUTES => ['customer']
         ]);
         $user['_links'] = [
-            'collection' => $this->router->generate('get_users_collection')
+            'collection' => $this->router->generate('get_users_collection'),
+            'delete' => $this->router->generate('delete_users', ['id' => $id])
         ];
 
         return new JsonResponse($user);
