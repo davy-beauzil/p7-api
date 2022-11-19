@@ -3,11 +3,14 @@
 namespace App\Tests\Functional;
 
 use App\Entity\Customer;
+use App\Entity\Phone;
 use App\Entity\User;
 use App\Repository\CustomerRepository;
+use App\Repository\PhoneRepository;
 use App\Repository\UserRepository;
 use App\Tests\AbstractWebTestCase;
 use App\Tests\Fixtures\CustomerFixtures;
+use App\Tests\Fixtures\PhoneFixtures;
 use App\Tests\Fixtures\UserFixtures;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Doctrine\ORM\EntityManager;
@@ -24,6 +27,7 @@ abstract class AbstractAppCase extends AbstractWebTestCase
     protected ContainerInterface $container;
     private ?CustomerFixtures $customerFixtures = null;
     private ?UserFixtures $userFixtures = null;
+    private ?PhoneFixtures $phoneFixtures = null;
 
     /**
      * @throws \JsonException
@@ -60,5 +64,15 @@ abstract class AbstractAppCase extends AbstractWebTestCase
             $this->customerFixtures = new CustomerFixtures($customerRepository, $hasher);
         }
         return $this->customerFixtures;
+    }
+
+    public function getPhoneFixtures(): PhoneFixtures
+    {
+        if (!$this->phoneFixtures instanceof PhoneFixtures) {
+            /** @var PhoneRepository $phoneRepository */
+            $phoneRepository = $this->getEntityManager()->getRepository(Phone::class);
+            $this->phoneFixtures = new PhoneFixtures($phoneRepository);
+        }
+        return $this->phoneFixtures;
     }
 }
