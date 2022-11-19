@@ -5,6 +5,10 @@ namespace App\Tests\Functional;
 use App\Entity\Customer;
 use App\Entity\User;
 use App\Repository\CustomerRepository;
+use App\Repository\UserRepository;
+use App\Tests\AbstractWebTestCase;
+use App\Tests\Fixtures\CustomerFixtures;
+use App\Tests\Fixtures\UserFixtures;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Doctrine\ORM\EntityManager;
 use Exception;
@@ -14,68 +18,47 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-abstract class AbstractAppCase extends WebTestCase
+abstract class AbstractAppCase extends AbstractWebTestCase
 {
-    const EMAIL = 'test@test.fr';
-    const PASSWORD = 'test@1234';
     protected KernelBrowser $client;
     protected ContainerInterface $container;
-
-    protected function setUp(): void
-    {
-        $this->client = self::createClient([], [
-            'HTTPS' => 'on',
-            'CONTENT_TYPE' => 'application/json'
-        ]);
-        $this->truncateEntities();
-        $this->container = static::getContainer();
-    }
+    private ?CustomerFixtures $customerFixtures = null;
+    private ?UserFixtures $userFixtures = null;
 
     /**
-     * @throws Exception
+     * @throws \JsonException
      */
-    protected function addCustomer(string $email = self::EMAIL, string $password = self::PASSWORD): Customer
+    public function getJWT(Customer $customer): string
     {
-        /** @var UserPasswordHasherInterface $hasher */
-        $hasher = $this->container->get(UserPasswordHasherInterface::class);
-
-        /** @var CustomerRepository $customerRepository */
-        $customerRepository = $this->container->get(CustomerRepository::class);
-
-        $customer = new Customer();
-        $customer->setEmail($email)
-            ->setPassword($hasher->hashPassword($customer, $password))
-            ->setRoles(['ROLE_USER'])
-            ->setPhoneNumber('0612345678')
-            ->setZipCode('99000')
-            ->setSiret('XXX XXX XXX')
-            ->setName('Test company')
-            ->setAddress('test')
-            ->setCity('test');
-
-        $customerRepository->add($customer, true);
-        return $customer;
-    }
-
-    protected function getJWT(string $email = self::EMAIL, string $password = self::PASSWORD): ?string
-    {
-        $body = sprintf('{"username": "%s", "password": "%s"}', $email, $password);
+        $body = sprintf('{"username": "%s", "password": "%s"}', $customer->getEmail(), CustomerFixtures::PASSWORD);
         $this->client->request(Request::METHOD_POST, '/api/login_check', content: $body);
         $response = $this->client->getResponse();
-        return json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR)['token'] ?? null;
+        $arrayResponse = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        if (array_key_exists('token', $arrayResponse)) {
+            return $arrayResponse['token'];
+        }
+        throw new \RuntimeException('Aucun JWT n\'a été reçu. Vérifiez que l\'utilisateur avec lequel vous essayez de vous connecter existe bien.');
     }
 
-    private function truncateEntities(): void
+    public function getUserFixtures(): UserFixtures
     {
-        $purger = new ORMPurger($this->getEntityManager());
-        $purger->purge();
+        if (!$this->userFixtures) {
+            /** @var UserRepository $userRepository */
+            $userRepository = $this->getEntityManager()->getRepository(User::class);
+            $this->userFixtures = new UserFixtures($userRepository);
+        }
+        return $this->userFixtures;
     }
 
-    protected function getEntityManager(): EntityManager
+    public function getCustomerFixtures(): CustomerFixtures
     {
-        return self::$kernel->getContainer()
-            ->get('doctrine')
-            ->getManager()
-            ;
+        if (!$this->customerFixtures instanceof CustomerFixtures) {
+            /** @var CustomerRepository $customerRepository */
+            $customerRepository = $this->getEntityManager()->getRepository(Customer::class);
+            /** @var UserPasswordHasherInterface $hasher */
+            $hasher = $this->container->get(UserPasswordHasherInterface::class);
+            $this->customerFixtures = new CustomerFixtures($customerRepository, $hasher);
+        }
+        return $this->customerFixtures;
     }
 }

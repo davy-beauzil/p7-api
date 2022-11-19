@@ -4,6 +4,8 @@ namespace Functional;
 
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
+use App\Tests\Fixtures\CustomerFixtures;
+use App\Tests\Fixtures\PhoneFixtures;
 use App\Tests\Functional\AbstractAppCase;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
@@ -12,6 +14,12 @@ use Symfony\Component\HttpFoundation\Request;
 
 class ApiPhonesTest extends AbstractAppCase
 {
+    private function __construct(
+        private readonly PhoneFixtures $phoneFixtures,
+        private readonly CustomerFixtures $customerFixtures,
+    )
+    {}
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,8 +33,11 @@ class ApiPhonesTest extends AbstractAppCase
     public function customerCanSeePhonesList(): void
     {
         // Given
-        $this->addCustomer();
+        $me = $this->customerFixtures->addCustomer('test@test.fr');
+        $phones = [];
+//        $this->addCustomer();
         $jwt = $this->getJWT();
+        $this->phoneFixtures->addPhone()
 
         // When
         $this->client->request(Request::METHOD_GET, '/api/phones', server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
