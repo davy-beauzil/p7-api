@@ -60,6 +60,7 @@ class ApiPhonesTest extends AbstractAppCase
         // Given
         $customer = $this->getCustomerFixtures()->addCustomer();
         $jwt = $this->getJWT($customer);
+        $phone = $this->getPhone();
 
         // When
         $this->client->request(Request::METHOD_GET, sprintf('/api/phones/%s', $phone->getId()), server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
