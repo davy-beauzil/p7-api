@@ -50,7 +50,7 @@ class ApiUsersTest extends AbstractAppCase
 
         // Then
         static::assertResponseIsSuccessful();
-        static::assertCount(5, $arrayContent);
+        static::assertCount(5, $arrayContent['data']);
     }
 
     /**
@@ -151,7 +151,7 @@ class ApiUsersTest extends AbstractAppCase
         // Then
         static::assertResponseStatusCodeSame(201);
         static::assertStringContainsString('Created', $response->getContent());
-        static::assertStringContainsString('/api/users/', $response->headers->get('Location'));
+        static::assertStringStartsWith('/api/users/', $response->headers->get('Location'));
     }
 
     /**
