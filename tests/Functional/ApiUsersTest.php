@@ -7,18 +7,26 @@ namespace App\Tests\Functional;
 use App\Entity\Customer;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Tests\Fixtures\CustomerFixtures;
+use App\Tests\Fixtures\UserFixtures;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
 
 class ApiUsersTest extends AbstractAppCase
 {
     /**
+     * $firstUser = $this->addCustomer();
+     * $secondUser = $this->addCustomer('new-user@test.fr', 'test');
+     * $this->addUsersToCustomer($firstUser);
+     * $this->addUsersToCustomer($secondUser);
+     */
+
+    /**
      * @throws Exception
      */
     public function setUp(): void
     {
         parent::setUp();
-        $this->makeFixtures();
     }
 
     /**
@@ -28,20 +36,21 @@ class ApiUsersTest extends AbstractAppCase
     public function customerCanSeeLinkedUsersListTest(): void
     {
         // Given
-        $jwt = $this->getJWT();
+        $customer = $this->getCustomerFixtures()->addCustomer();
+        for ($i = 0; $i < 5; $i++) {
+            $this->getUserFixtures()->addUser($customer);
+        }
+        $jwt = $this->getJWT($customer);
 
         // When
         $this->client->request(Request::METHOD_GET, '/api/users', server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
         $response = $this->client->getResponse();
         $content = $response->getContent();
+        $arrayContent = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
 
         // Then
         static::assertResponseIsSuccessful();
-        static::assertStringContainsString('test@test.fr0', $content);
-        static::assertStringContainsString('test@test.fr1', $content);
-        static::assertStringContainsString('test@test.fr2', $content);
-        static::assertStringContainsString('test@test.fr3', $content);
-        static::assertStringContainsString('test@test.fr4', $content);
+        static::assertCount(5, $arrayContent['data']);
     }
 
     /**
@@ -66,12 +75,9 @@ class ApiUsersTest extends AbstractAppCase
     public function customerCanSeeDetailFromLinkedUserTest(): void
     {
         // Given
-        $jwt = $this->getJWT();
-        $em = $this->getEntityManager();
-        /** @var Customer $customer */
-        $customer = $em->getRepository(Customer::class)
-            ->findOneBy(['email' => 'test@test.fr']);
-        $user = $customer->getUsers()->first();
+        $customer = $this->getCustomerFixtures()->addCustomer();
+        $user = $this->getUserFixtures()->addUser($customer);
+        $jwt = $this->getJWT($customer);
 
         // When
         $this->client->request(Request::METHOD_GET, sprintf('/api/users/%s', $user->getId()), server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
@@ -94,12 +100,11 @@ class ApiUsersTest extends AbstractAppCase
     public function customerCannotSeeDetailFromUnlinkedUserTest(): void
     {
         // Given
-        $jwt = $this->getJWT();
-        $em = $this->getEntityManager();
-        /** @var Customer $customer */
-        $customer = $em->getRepository(Customer::class)
-            ->findOneBy(['email' => 'new-user@test.fr']);
-        $user = $customer->getUsers()->first();
+        $fixtures = $this->getCustomerFixtures();
+        $customer = $fixtures->addCustomer();
+        $customer2 = $fixtures->addCustomer('customer2@test.fr');
+        $user = $this->getUserFixtures()->addUser($customer2);
+        $jwt = $this->getJWT($customer);
 
         // When
         $this->client->request(Request::METHOD_GET, sprintf('/api/users/%s', $user->getId()), server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
@@ -117,11 +122,8 @@ class ApiUsersTest extends AbstractAppCase
     public function anonymousCannotSeeDetailFromUserTest(): void
     {
         // Given
-        $em = $this->getEntityManager();
-        /** @var Customer $customer */
-        $customer = $em->getRepository(Customer::class)
-            ->findOneBy(['email' => 'new-user@test.fr']);
-        $user = $customer->getUsers()->first();
+        $customer = $this->getCustomerFixtures()->addCustomer();
+        $user = $this->getUserFixtures()->addUser($customer);
 
         // When
         $this->client->request(Request::METHOD_GET, sprintf('/api/users/%s', $user->getId()));
@@ -139,7 +141,8 @@ class ApiUsersTest extends AbstractAppCase
     public function customerCanCreateANewUserTest(): void
     {
         // Given
-        $jwt = $this->getJWT();
+        $customer = $this->getCustomerFixtures()->addCustomer();
+        $jwt = $this->getJWT($customer);
 
         // When
         $this->client->request(Request::METHOD_POST, '/api/users', ['firstname' => 'firstname', 'lastname' => 'lastname', 'email' => 'test@test.fr', 'phoneNumber' => '00 00 00 00 00'], server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
@@ -148,7 +151,7 @@ class ApiUsersTest extends AbstractAppCase
         // Then
         static::assertResponseStatusCodeSame(201);
         static::assertStringContainsString('Created', $response->getContent());
-        static::assertStringContainsString('/api/users/', $response->headers->get('Location'));
+        static::assertStringStartsWith('/api/users/', $response->headers->get('Location'));
     }
 
     /**
@@ -175,23 +178,24 @@ class ApiUsersTest extends AbstractAppCase
     public function customerGetBadRequestIfHeDontRespectUserValidations(User $user, int $statusCode, string $message): void
     {
         // Given
-        $jwt = $this->getJWT();
+        $customer = $this->getCustomerFixtures()->addCustomer();
+        $jwt = $this->getJWT($customer);
         $parameters = [];
 
         $rp = new \ReflectionProperty(User::class, 'firstname');
-        if($rp->isInitialized($user)){
+        if ($rp->isInitialized($user)) {
             $parameters['firstname'] = $user->getFirstname();
         }
         $rp = new \ReflectionProperty(User::class, 'lastname');
-        if($rp->isInitialized($user)){
+        if ($rp->isInitialized($user)) {
             $parameters['lastname'] = $user->getLastname();
         }
         $rp = new \ReflectionProperty(User::class, 'email');
-        if($rp->isInitialized($user)){
+        if ($rp->isInitialized($user)) {
             $parameters['email'] = $user->getEmail();
         }
         $rp = new \ReflectionProperty(User::class, 'phoneNumber');
-        if($rp->isInitialized($user)){
+        if ($rp->isInitialized($user)) {
             $parameters['phoneNumber'] = $user->getPhoneNumber();
         }
 
@@ -222,11 +226,9 @@ class ApiUsersTest extends AbstractAppCase
     public function customerCanRemoveLinkedUserTest(): void
     {
         // Given
-        $jwt = $this->getJWT();
-        /** @var Customer $customer */
-        $customer = $this->getEntityManager()->getRepository(Customer::class)
-            ->findOneBy(['email' => 'test@test.fr']);
-        $user = $customer->getUsers()->first();
+        $customer = $this->getCustomerFixtures()->addCustomer();
+        $user = $this->getUserFixtures()->addUser($customer);
+        $jwt = $this->getJWT($customer);
 
         // When
         $this->client->request(Request::METHOD_DELETE, sprintf('/api/users/%s', $user->getId()), server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
@@ -243,11 +245,11 @@ class ApiUsersTest extends AbstractAppCase
     public function customerCannotRemoveUserNotLinkedTest(): void
     {
         // Given
-        $jwt = $this->getJWT();
-        /** @var Customer $customer */
-        $customer = $this->getEntityManager()->getRepository(Customer::class)
-            ->findOneBy(['email' => 'new-user@test.fr']);
-        $user = $customer->getUsers()->first();
+        $fixtures = $this->getCustomerFixtures();
+        $customer = $fixtures->addCustomer();
+        $customer2 = $fixtures->addCustomer('customer2@test.fr');
+        $user = $this->getUserFixtures()->addUser($customer2);
+        $jwt = $this->getJWT($customer);
 
         // When
         $this->client->request(Request::METHOD_DELETE, sprintf('/api/users/%s', $user->getId()), server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
@@ -256,37 +258,5 @@ class ApiUsersTest extends AbstractAppCase
         // Then
         static::assertResponseStatusCodeSame(404);
         static::assertStringContainsString('Resource not found', $response->getContent());
-    }
-
-    /**
-     * @throws \Exception
-     */
-    private function makeFixtures(): void
-    {
-        $firstUser = $this->addCustomer();
-        $secondUser = $this->addCustomer('new-user@test.fr', 'test');
-
-        $this->addUsersToCustomer($firstUser);
-        $this->addUsersToCustomer($secondUser);
-    }
-
-    /**
-     * @throws \Exception
-     */
-    private function addUsersToCustomer(Customer $customer, int $nbUsers = 5): void
-    {
-        /** @var UserRepository $userRepository */
-        $userRepository = $this->container->get(UserRepository::class);
-
-        for($i = 0 ; $i < $nbUsers ; $i++){
-            $user = new User();
-            $user->setFirstname($customer->getEmail() . $i)
-                ->setLastname($customer->getEmail() . $i)
-                ->setEmail($customer->getEmail() . $i)
-                ->setPhoneNumber($customer->getEmail() . $i)
-                ->setCustomer($customer);
-            $customer->addUser($user);
-            $userRepository->add($user, true);
-        }
     }
 }

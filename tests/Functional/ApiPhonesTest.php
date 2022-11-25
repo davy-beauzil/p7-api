@@ -2,8 +2,11 @@
 
 namespace Functional;
 
+use App\Dto\QueryParameters;
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
+use App\Tests\Fixtures\CustomerFixtures;
+use App\Tests\Fixtures\PhoneFixtures;
 use App\Tests\Functional\AbstractAppCase;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
@@ -12,9 +15,18 @@ use Symfony\Component\HttpFoundation\Request;
 
 class ApiPhonesTest extends AbstractAppCase
 {
-    protected function setUp(): void
+    /** @var Phone[] $phones */
+    private array $phones = [];
+
+    /**
+     * @throws Exception
+     */
+    public function setUp(): void
     {
         parent::setUp();
+        for ($i = 0; $i < 25; $i++) {
+            $this->phones[] = $this->getPhoneFixtures()->addPhone();
+        }
     }
 
     /**
@@ -25,8 +37,8 @@ class ApiPhonesTest extends AbstractAppCase
     public function customerCanSeePhonesList(): void
     {
         // Given
-        $this->addCustomer();
-        $jwt = $this->getJWT();
+        $customer = $this->getCustomerFixtures()->addCustomer();
+        $jwt = $this->getJWT($customer);
 
         // When
         $this->client->request(Request::METHOD_GET, '/api/phones', server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
@@ -35,7 +47,7 @@ class ApiPhonesTest extends AbstractAppCase
         $response = $this->client->getResponse()->getContent();
         static::assertResponseIsSuccessful();
         static::assertJson($response);
-        static::assertGreaterThan(1, count(json_decode($response, true)));
+        static::assertCount(QueryParameters::PER_PAGE, json_decode($response, true, 512, JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -46,8 +58,8 @@ class ApiPhonesTest extends AbstractAppCase
     public function customerCanSeePhonesDetails(): void
     {
         // Given
-        $this->addCustomer();
-        $jwt = $this->getJWT();
+        $customer = $this->getCustomerFixtures()->addCustomer();
+        $jwt = $this->getJWT($customer);
         $phone = $this->getPhone();
 
         // When
@@ -80,6 +92,7 @@ class ApiPhonesTest extends AbstractAppCase
     /**
      * Check if not authenticated person get an Unauthorized error when try to access to phones details
      * @test
+     * @throws Exception
      */
     public function notAuthenticatedCannotSeePhonesDetails(): void
     {
@@ -98,12 +111,13 @@ class ApiPhonesTest extends AbstractAppCase
     /**
      * Check if customer get a Not Found response if id from phone does not exist
      * @test
+     * @throws \JsonException
      */
     public function customerGetNotFoundResponseIfIdOfPhoneDoesNotExist(): void
     {
         // Given
-        $this->addCustomer();
-        $jwt = $this->getJWT();
+        $customer = $this->getCustomerFixtures()->addCustomer();
+        $jwt = $this->getJWT($customer);
 
         // When
         $this->client->request(Request::METHOD_GET, '/api/phones/phone-does-not-exist', server: ['HTTP_AUTHORIZATION' => sprintf('Bearer %s', $jwt)]);
@@ -114,18 +128,18 @@ class ApiPhonesTest extends AbstractAppCase
         static::assertJson($response);
     }
 
+
     /**
-     * @throws NonUniqueResultException
-     * @throws NoResultException
+     * @throws Exception
      */
     private function getPhone(): Phone
     {
-        /** @var PhoneRepository $phoneRepository */
-        $phoneRepository = $this->container->get(PhoneRepository::class);
-
-        return $phoneRepository->createQueryBuilder('p')
-            ->setMaxResults(1)
-            ->getQuery()
-            ->getSingleResult();
+        if (count($this->phones) <= 0) {
+            for ($i = 0; $i < 25; $i++) {
+                $this->phones[] = $this->getPhoneFixtures()->addPhone();
+            }
+        }
+        $phones = array_values($this->phones);
+        return array_shift($phones);
     }
 }

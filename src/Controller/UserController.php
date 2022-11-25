@@ -39,18 +39,17 @@ class UserController extends BaseController
     #[Route('/users', name: 'get_users_collection', methods: [Request::METHOD_GET])]
     public function getUsersCollection(Request $request): JsonResponse
     {
-        $this->denyAccessIfNotCustomer();
         /** @var Customer $customer */
         $customer = $this->getUser();
 
         $queryParameters = $this->getQueryParameters($request);
         $users = $this->userRepository->findUsersWithPaginationByCustomer($queryParameters, $customer);
 
+        /** @var array<array-key, mixed> $users */
         $users = $this->serializer->normalize($users, 'json', [
             AbstractNormalizer::IGNORED_ATTRIBUTES => ['customer']
         ]);
-
-        return new JsonResponse($users);
+        return $this->createJson($users, queryParameters: $queryParameters);
     }
 
     /**
@@ -59,7 +58,6 @@ class UserController extends BaseController
     #[Route('/users/{id}', name: 'get_users_item', methods: [Request::METHOD_GET])]
     public function getUsersItem(string $id, Request $request): JsonResponse
     {
-        $this->denyAccessIfNotCustomer();
         /** @var Customer $customer */
         $customer = $this->getUser();
 
@@ -73,11 +71,12 @@ class UserController extends BaseController
         $user = $this->serializer->normalize($user, 'json', [
             AbstractNormalizer::IGNORED_ATTRIBUTES => ['customer']
         ]);
-        $user['_links'] = [
-            'collection' => $this->router->generate('get_users_collection')
+        $links = [
+            'collection' => $this->router->generate('get_users_collection'),
+            'delete' => $this->router->generate('delete_users', ['id' => $id])
         ];
 
-        return new JsonResponse($user);
+        return $this->createJSON($user, $links);
     }
 
     /**
@@ -86,7 +85,6 @@ class UserController extends BaseController
     #[Route('/users', name: 'post_users', methods: [Request::METHOD_POST])]
     public function create(Request $request, ValidatorInterface $validator): JsonResponse
     {
-        $this->denyAccessIfNotCustomer();
         /** @var Customer $customer */
         $customer = $this->getUser();
 
@@ -99,19 +97,9 @@ class UserController extends BaseController
         } else {
             return $this->createBadRequestResponse();
         }
-        return new JsonResponse(
-            [
-                'message' => 'Created',
-                'code' => 201,
-                '_links' => [
-                    'item' => $this->router->generate('get_users_item', ['id' => $user->getId()])
-                ]
-            ],
-            201,
-            [
-                'Location' => $this->generateUrl('get_users_item', ['id' => $user->getId()])
-            ]
-        );
+
+        $link = $this->router->generate('get_users_item', ['id' => $user->getId()]);
+        return $this->createCreatedResponse($link);
     }
 
     /**
@@ -120,7 +108,6 @@ class UserController extends BaseController
     #[Route('/users/{id}', name: 'delete_users', methods: [Request::METHOD_DELETE])]
     public function delete(string $id, Request $request): JsonResponse
     {
-        $this->denyAccessIfNotCustomer();
         /** @var Customer $customer */
         $customer = $this->getUser();
 

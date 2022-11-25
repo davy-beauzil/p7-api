@@ -43,7 +43,6 @@ class PhoneController extends BaseController
     #[Route('/phones/{id}', name: 'phones_details', methods: Request::METHOD_GET)]
     public function getPhonesDetails(string $id): JsonResponse
     {
-        $cacheId = sprintf('getPhonesDetails-%s', $id);
         try {
             $phone = $this->phoneRepository->findOneById($id);
         } catch (ResourceNotFoundException) {

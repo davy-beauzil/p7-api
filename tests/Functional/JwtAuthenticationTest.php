@@ -4,6 +4,7 @@ namespace App\Tests\Functional;
 
 use App\Entity\Customer;
 use App\Repository\CustomerRepository;
+use App\Tests\Fixtures\CustomerFixtures;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -26,28 +27,29 @@ class JwtAuthenticationTest extends AbstractAppCase
     public function goodCredentialsOfferJWT(): void
     {
         // given
-        $this->addCustomer();
-        $body = sprintf('{"username": "%s", "password": "%s"}', AbstractAppCase::EMAIL, AbstractAppCase::PASSWORD);
+        $this->getCustomerFixtures()->addCustomer();
+        $body = sprintf('{"username": "%s", "password": "%s"}', CustomerFixtures::EMAIL, CustomerFixtures::PASSWORD);
         /** @var JWTEncoderInterface $encoder */
         $encoder = $this->container->get(JWTEncoderInterface::class);
 
         // when
         $this->client->request(Request::METHOD_POST, '/api/login_check', content: $body);
-        $response = $this->client->getResponse();
-        $token = json_decode($response->getContent(), true)['token'];
-        $payload = $encoder->decode($token);
 
         // then
         static::assertResponseIsSuccessful();
-        static::assertJson($response->getContent());
-        static::assertSame('Test company', $payload['name']);
+        $response = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        static::assertArrayHasKey('token', $response);
+        $payload = $encoder->decode($response['token']);
+        static::assertJson($this->client->getResponse()->getContent());
+        static::assertSame('Random Customer', $payload['name']);
         static::assertSame('test@test.fr', $payload['username']);
         static::assertArrayNotHasKey('password', $payload);
-        static::assertGreaterThan(time(), intval($payload['exp']));
+        static::assertGreaterThan(time(), (int)$payload['exp']);
     }
 
     /**
      * @test
+     * @throws \JsonException
      */
     public function badCredentialsReturn401(): void
     {
@@ -56,7 +58,7 @@ class JwtAuthenticationTest extends AbstractAppCase
 
         // when
         $this->client->request(Request::METHOD_POST, '/api/login_check', content: $body);
-        $response = json_decode($this->client->getResponse()->getContent(), true);
+        $response = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         // then
         static::assertResponseStatusCodeSame(401);

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\QueryParameters;
 use App\Entity\Customer;
 use Doctrine\Common\Annotations\AnnotationReader;
+use PHP_CodeSniffer\Tokenizers\JS;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -45,12 +46,52 @@ class BaseController extends AbstractController
         return $queryParameters;
     }
 
+    /**
+     * @throws ExceptionInterface
+     * @param array<array-key, mixed> $links
+     * @param array<array-key, mixed> $data
+     */
+    public function createJSON(array $data, array $links = [], QueryParameters $queryParameters = null): JsonResponse
+    {
+        $parameters = null;
+        if ($queryParameters instanceof QueryParameters) {
+            $parameters = $this->serializer->normalize($queryParameters, 'json');
+        }
+
+        $response = ['data' => $data];
+        if ($links !== []) {
+            $response['_links'] = $links;
+        }
+        if (is_array($parameters)) {
+            $response = array_merge($response, $parameters);
+        }
+
+        return $this->json($response);
+    }
+
     private function createResponse(string $message, int $code): JsonResponse
     {
         return new JsonResponse([
             'message' => $message,
             'code' => $code
         ], $code);
+    }
+
+    public function createCreatedResponse(string $link, string $message = 'Created'): JsonResponse
+    {
+        return new JsonResponse(
+            [
+            'message' => $message,
+            'code' => 201,
+            '_link' => [
+                'item' => $link
+            ]
+        ],
+            201,
+            [
+                'Location' => $link
+            ]
+        );
     }
 
     public function createNoContentResponse(string $message = 'No Content'): JsonResponse
