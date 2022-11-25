@@ -13,10 +13,14 @@ else Customer is logged in
     UserRepository --> Database : get user
     Database --> UserRepository
     UserRepository --> API
-    alt user is not linked to Customer
-        API --> Customer : return 401 (Unauthorized)
-    else user is linked to Customer
-        API --> Customer : return 200 (OK)
+    alt user not exists
+        API --> Customer : return 404 (Not Found))
+    else user exists
+        alt user is not linked to Customer
+            API --> Customer : return 401 (Unauthorized)
+        else user is linked to Customer
+            API --> Customer : return 200 (OK)
+        end
     end
 end
 @enduml
