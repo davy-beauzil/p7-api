@@ -36,6 +36,6 @@ class Phone {
     priceWithoutTax: float
 }
 
-Customer "1" -- "1..*" User : employer
+Customer "1" -- "*" User : enregistrer
 
 @enduml
