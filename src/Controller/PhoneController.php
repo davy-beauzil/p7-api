@@ -34,7 +34,8 @@ class PhoneController extends BaseController
     {
         $queryParameters = $this->getQueryParameters($request);
         $phones = $this->phoneRepository->findWithPagination($queryParameters);
-        return new JsonResponse($this->serializer->normalize($phones, 'json', [AbstractNormalizer::GROUPS => ['get:collection']]));
+        $phones = $this->serializer->normalize($phones, 'json', [AbstractNormalizer::GROUPS => ['get:collection']]);
+        return $this->createJSON($phones, queryParameters: $queryParameters);
     }
 
     /**
@@ -50,11 +51,10 @@ class PhoneController extends BaseController
         }
 
         /** @var array<array-key, mixed> $response */
-        $response = $this->serializer->normalize($phone, 'json', [AbstractNormalizer::GROUPS => 'get:item']);
-        $response['_links'] = [
+        $phone = $this->serializer->normalize($phone, 'json', [AbstractNormalizer::GROUPS => 'get:item']);
+        $links = [
             'list' => $this->router->generate('phones_collection')
         ];
-
-        return new JsonResponse($response);
+        return $this->createJSON($phone, $links);
     }
 }
